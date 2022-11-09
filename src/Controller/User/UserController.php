@@ -5,14 +5,22 @@ namespace App\Controller\User;
 use App\ArgumentResolver\Attribute\Body;
 use App\ArgumentResolver\Attribute\Entity;
 use App\ArgumentResolver\Attribute\QueryParam;
+use App\DataTransformer\User\UserTransformer;
 use App\DTO\User\UserDTO;
 use App\DTO\User\UserFilterDTO;
 use App\Entity\User\User;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/user')]
+#[AsController]
 class UserController
 {
+    public function __construct(private UserTransformer $userTransformer, private ValidatorInterface $validator)
+    {
+    }
+
     # example: /edit/20
     #[Route('/edit/{id}',  methods: ['GET'])]
     public function list(int $id): never
@@ -72,7 +80,12 @@ class UserController
     #[Route('/user', methods: ['POST'])]
     public function userPost(#[Body] UserDTO $userDTO): never
     {
-        dd($userDTO);
+        $user = new User();
+
+        dd($this->validator->validate($userDTO));
+        $this->userTransformer->toEntity($userDTO, $user);
+
+        dd($user);
     }
 
     #[Route('/user/{user}', methods: ['PUT', 'PATCH'])]
